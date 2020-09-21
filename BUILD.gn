@@ -99,7 +99,7 @@ config("skia_private") {
   if (is_skia_dev_build && !is_wasm) {
     defines += [
       "SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1",
-      "GPU_TEST_UTILS=1",
+      # "GPU_TEST_UTILS=1",
     ]
   }
   libs = []
