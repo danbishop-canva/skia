@@ -1836,9 +1836,9 @@ group("modules") {
   # rust-skia: HACK: only add modules/skparagraph if we do use icu for now, 
   # this prevents a linker error on macOS
   if (skia_use_icu) {
-    deps = [ "modules/skparagraph" ]
+    deps = [ "modules/skparagraph", "modules/svg" ]
   } else {
-    deps = []
+    deps = [ "modules/svg" ]
   }
 }
 
