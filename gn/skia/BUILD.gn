@@ -329,8 +329,10 @@ config("default") {
   }
 
   if (is_wasm) {
-    cflags += [ "--sysroot=$skia_emsdk_dir/upstream/emscripten/cache/sysroot" ]
-    ldflags += [ "--sysroot=$skia_emsdk_dir/upstream/emscripten/cache/sysroot" ]
+    # rust-skia: We currently don't support the included emsdk, so we have to disable these
+    # overrides.
+    # cflags += [ "--sysroot=$skia_emsdk_dir/upstream/emscripten/cache/sysroot" ]
+    # ldflags += [ "--sysroot=$skia_emsdk_dir/upstream/emscripten/cache/sysroot" ]
   }
 
   # sanitize only applies to the default toolchain (usually the target).
