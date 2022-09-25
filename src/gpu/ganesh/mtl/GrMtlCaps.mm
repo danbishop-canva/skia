@@ -651,7 +651,8 @@ size_t GrMtlCaps::GetFormatIndex(MTLPixelFormat pixelFormat) {
 void GrMtlCaps::initFormatTable() {
     FormatInfo* info;
 
-    if (@available(macos 11.0, *)) {
+    // rust-skia: `___isPlatformVersionAtLeast` linker error.
+    if (false /* @available(macos 11.0, *) */) {
         SkASSERT(kMTLPixelFormatB5G6R5Unorm == MTLPixelFormatB5G6R5Unorm);
         SkASSERT(kMTLPixelFormatABGR4Unorm == MTLPixelFormatABGR4Unorm);
         SkASSERT(kMTLPixelFormatETC2_RGB8 == MTLPixelFormatETC2_RGB8);
@@ -702,7 +703,9 @@ void GrMtlCaps::initFormatTable() {
         }
     }
 
-    if (@available(macOS 11.0, iOS 8.0, tvOS 9.0, *)) {
+    // rust-skia: `___isPlatformVersionAtLeast` linker error.
+    // if (@available(macOS 11.0, iOS 8.0, tvOS 9.0, *)) {
+    if (@available(iOS 8.0, *)) {
         if (this->isApple()) {
             // Format: B5G6R5Unorm
             {
@@ -937,7 +940,9 @@ void GrMtlCaps::initFormatTable() {
         }
     }
 
-    if (@available(macOS 11.0, iOS 8.0, tvOS 9.0, *)) {
+    // rust-skia: `___isPlatformVersionAtLeast` linker error.
+    // if (@available(macOS 11.0, iOS 8.0, tvOS 9.0, *)) {
+    if (@available(iOS 8.0, *)) {
         if (this->isApple()) {
             // ETC2_RGB8
             info = &fFormatTable[GetFormatIndex(MTLPixelFormatETC2_RGB8)];
@@ -997,7 +1002,9 @@ void GrMtlCaps::initFormatTable() {
 
     this->setColorType(GrColorType::kAlpha_8,           { MTLPixelFormatR8Unorm,
                                                           MTLPixelFormatA8Unorm });
-    if (@available(macOS 11.0, iOS 8.0, tvOS 9.0, *)) {
+    // rust-skia: `___isPlatformVersionAtLeast` linker error.
+    // if (@available(macOS 11.0, iOS 8.0, tvOS 9.0, *)) {
+    if (@available(iOS 8.0, *)) {
         if (this->isApple()) {
             this->setColorType(GrColorType::kBGR_565,   { MTLPixelFormatB5G6R5Unorm });
             this->setColorType(GrColorType::kABGR_4444, { MTLPixelFormatABGR4Unorm });
@@ -1094,7 +1101,8 @@ GrBackendFormat GrMtlCaps::getBackendFormatFromCompressionType(
         case SkTextureCompressionType::kNone:
             return {};
         case SkTextureCompressionType::kETC2_RGB8_UNORM:
-            if (@available(macOS 11.0, *)) {
+            // rust-skia: `___isPlatformVersionAtLeast` linker error.
+            if (false /* @available(macOS 11.0, *)*/) {
                 if (this->isApple()) {
                     return GrBackendFormats::MakeMtl(MTLPixelFormatETC2_RGB8);
                 } else {
