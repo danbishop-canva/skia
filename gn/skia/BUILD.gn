@@ -313,18 +313,20 @@ config("default") {
         "arm64-apple-macos11",
       ]
     } else {
-      asmflags += [
-        "-target",
-        "x86_64-apple-macos10.15",
-      ]
-      cflags += [
-        "-target",
-        "x86_64-apple-macos10.15",
-      ]
-      ldflags += [
-        "-target",
-        "x86_64-apple-macos10.15",
-      ]
+      # rust-skia: This was introduced in m113, but would override MACOSX_DEPLOYMENT_TARGET,
+      # which we need for building on CI. Also metal builds must be built with at least 10.14.
+      # asmflags += [
+      #   "-target",
+      #   "x86_64-apple-macos10.15",
+      # ]
+      # cflags += [
+      #   "-target",
+      #   "x86_64-apple-macos10.15",
+      # ]
+      # ldflags += [
+      #   "-target",
+      #   "x86_64-apple-macos10.15",
+      # ]
     }
   }
 
