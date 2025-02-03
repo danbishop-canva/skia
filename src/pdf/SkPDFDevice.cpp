@@ -99,6 +99,7 @@ SkPDFDevice::MarkedContentManager::MarkedContentManager(SkPDFDocument* document,
     , fCurrentlyActiveMark()
     , fNextMarksElemId(0)
     , fMadeMarks(false)
+    , fCurrentlyActiveTextMark(false)
 {}
 
 SkPDFDevice::MarkedContentManager::~MarkedContentManager() {
@@ -111,7 +112,7 @@ void SkPDFDevice::MarkedContentManager::setNextMarksElemId(int nextMarksElemId) 
 }
 int SkPDFDevice::MarkedContentManager::elemId() const { return fNextMarksElemId; }
 
-void SkPDFDevice::MarkedContentManager::beginMark() {
+void SkPDFDevice::MarkedContentManager::beginMark(bool textMark) {
     if (fNextMarksElemId == fCurrentlyActiveMark.elemId()) {
         return;
     }
@@ -119,6 +120,14 @@ void SkPDFDevice::MarkedContentManager::beginMark() {
         // End this mark
         fOut->writeText("EMC\n");
         fCurrentlyActiveMark = SkPDFStructTree::Mark();
+        if (fCurrentlyActiveTextMark) {
+            fCurrentlyActiveTextMark = false;
+            fOut->writeText("ET\n");
+        }
+    }
+    if (textMark) {
+        fCurrentlyActiveTextMark = true;
+        fOut->writeText("BT\n");
     }
     if (fNextMarksElemId) {
         fCurrentlyActiveMark = fDoc->createMarkForElemId(fNextMarksElemId);
@@ -952,13 +961,10 @@ void SkPDFDevice::internalDrawGlyphRun(
     SkMatrix pageXform = this->deviceToGlobal().asM33();
     pageXform.postConcat(fDocument->currentPageTransform());
 
-    fMarkManager.beginMark();
+    fMarkManager.beginMark(true);
     if (!glyphRun.text().empty()) {
         fDocument->addStructElemTitle(fMarkManager.elemId(), glyphRun.text());
     }
-
-    out->writeText("BT\n");
-    SK_AT_SCOPE_EXIT(out->writeText("ET\n"));
 
     const int numGlyphs = typeface.countGlyphs();
 
