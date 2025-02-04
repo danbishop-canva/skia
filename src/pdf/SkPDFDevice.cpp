@@ -1134,6 +1134,11 @@ std::unique_ptr<SkPDFDict> SkPDFDevice::makeResourceDict() {
 }
 
 std::unique_ptr<SkStreamAsset> SkPDFDevice::content() {
+    // Implicitly close any still active marked-content sequence.
+    // Must do this before fContent is written to buffer.
+    fMarkManager.setNextMarksElemId(0);
+    fMarkManager.beginMark();
+
     if (fActiveStackState.fContentStream) {
         fActiveStackState.drainStack();
         fActiveStackState = SkPDFGraphicStackState();
@@ -1141,11 +1146,6 @@ std::unique_ptr<SkStreamAsset> SkPDFDevice::content() {
     if (fContent.bytesWritten() == 0) {
         return std::make_unique<SkMemoryStream>();
     }
-
-    // Implicitly close any still active marked-content sequence.
-    // Must do this before fContent is written to buffer.
-    fMarkManager.setNextMarksElemId(0);
-    fMarkManager.beginMark();
 
     SkDynamicMemoryWStream buffer;
     if (fInitialTransform.getType() != SkMatrix::kIdentity_Mask) {

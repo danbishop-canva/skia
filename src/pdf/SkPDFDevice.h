@@ -170,8 +170,6 @@ private:
         // Tests if this marked content manager made any marks.
         bool madeMarks() const { return fMadeMarks; }
 
-        bool currentlyActiveTextMark() const { return fCurrentlyActiveTextMark; }
-
     private:
         SkPDFDocument* fDoc;
         SkDynamicMemoryWStream* fOut;
