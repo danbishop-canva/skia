@@ -112,35 +112,64 @@ void SkPDFDevice::MarkedContentManager::setNextMarksElemId(int nextMarksElemId) 
 }
 int SkPDFDevice::MarkedContentManager::elemId() const { return fNextMarksElemId; }
 
+// NON-SKIA-UPSTREAMED CHANGE
 void SkPDFDevice::MarkedContentManager::beginMark(bool textMark) {
+    // Case 1: Same element ID as current mark - do nothing
     if (fNextMarksElemId == fCurrentlyActiveMark.elemId()) {
+        // Special case for lettered bullet points, treat like text element
+        if (textMark) {
+            // End current structure mark if active
+            if (fCurrentlyActiveMark) {
+                fOut->writeText("EMC\n");
+                fCurrentlyActiveMark = SkPDFStructTree::Mark();
+            }
+            
+            // Reset text mode and start a new one
+            if (fCurrentlyActiveTextMark) {
+                fOut->writeText("ET\n");
+            }
+            fCurrentlyActiveTextMark = true;
+            fOut->writeText("BT\n");
+        }
         return;
     }
+    
+    // Case 2: New element ID - clean up existing marks
+    
+    // End current structure mark if active
     if (fCurrentlyActiveMark) {
-        // End this mark
         fOut->writeText("EMC\n");
         fCurrentlyActiveMark = SkPDFStructTree::Mark();
-        if (fCurrentlyActiveTextMark) {
-            fCurrentlyActiveTextMark = false;
-            fOut->writeText("ET\n");
-        }
     }
+    
+    // End current text mode if active
+    if (fCurrentlyActiveTextMark) {
+        fCurrentlyActiveTextMark = false;
+        fOut->writeText("ET\n");
+    }
+    
+    // Begin new text mode if requested
     if (textMark) {
         fCurrentlyActiveTextMark = true;
         fOut->writeText("BT\n");
     }
+    
+    // Create and begin new element mark if we have a valid element ID
     if (fNextMarksElemId) {
         fCurrentlyActiveMark = fDoc->createMarkForElemId(fNextMarksElemId);
+        
         if (fCurrentlyActiveMark) {
-            // Begin this mark
+            // Write PDF marked content operators
             SkPDFUnion::Name(fCurrentlyActiveMark.structType()).emitObject(fOut);
             fOut->writeText(" <</MCID ");
             fOut->writeDecAsText(fCurrentlyActiveMark.mcid());
             fOut->writeText(" >>BDC\n");
+            
             fMadeMarks = true;
         }
     }
 }
+// END OF NON-SKIA-UPSTREAMED CHANGE
 
 bool SkPDFDevice::MarkedContentManager::hasActiveMark() const { return bool(fCurrentlyActiveMark); }
 
