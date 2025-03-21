@@ -158,7 +158,9 @@ private:
         // a different element identifier the active marked-content sequence will first be closed.
         // If there is no structure element with the current element identifier then the
         // marked-content sequence will not be started.
-        void beginMark(bool markedText = false);
+        void beginMark();
+
+        void endMark();
 
         // Tests if there is an active marked-content sequence.
         bool hasActiveMark() const;
@@ -176,7 +178,6 @@ private:
         SkPDFStructTree::Mark fCurrentlyActiveMark;
         int fNextMarksElemId;
         bool fMadeMarks;
-        bool fCurrentlyActiveTextMark;
     } fMarkManager;
 
     SkDynamicMemoryWStream fContent;

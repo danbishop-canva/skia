@@ -99,7 +99,6 @@ SkPDFDevice::MarkedContentManager::MarkedContentManager(SkPDFDocument* document,
     , fCurrentlyActiveMark()
     , fNextMarksElemId(0)
     , fMadeMarks(false)
-    , fCurrentlyActiveTextMark(false)
 {}
 
 SkPDFDevice::MarkedContentManager::~MarkedContentManager() {
@@ -112,64 +111,35 @@ void SkPDFDevice::MarkedContentManager::setNextMarksElemId(int nextMarksElemId) 
 }
 int SkPDFDevice::MarkedContentManager::elemId() const { return fNextMarksElemId; }
 
-// NON-SKIA-UPSTREAMED CHANGE
-void SkPDFDevice::MarkedContentManager::beginMark(bool textMark) {
-    // Case 1: Same element ID as current mark - do nothing
+void SkPDFDevice::MarkedContentManager::beginMark() {
     if (fNextMarksElemId == fCurrentlyActiveMark.elemId()) {
-        // Special case for lettered bullet points, treat like text element
-        if (textMark) {
-            // End current structure mark if active
-            if (fCurrentlyActiveMark) {
-                fOut->writeText("EMC\n");
-                fCurrentlyActiveMark = SkPDFStructTree::Mark();
-            }
-            
-            // Reset text mode and start a new one
-            if (fCurrentlyActiveTextMark) {
-                fOut->writeText("ET\n");
-            }
-            fCurrentlyActiveTextMark = true;
-            fOut->writeText("BT\n");
-        }
         return;
     }
-    
-    // Case 2: New element ID - clean up existing marks
-    
-    // End current structure mark if active
     if (fCurrentlyActiveMark) {
+        // End this mark
         fOut->writeText("EMC\n");
         fCurrentlyActiveMark = SkPDFStructTree::Mark();
     }
-    
-    // End current text mode if active
-    if (fCurrentlyActiveTextMark) {
-        fCurrentlyActiveTextMark = false;
-        fOut->writeText("ET\n");
-    }
-    
-    // Begin new text mode if requested
-    if (textMark) {
-        fCurrentlyActiveTextMark = true;
-        fOut->writeText("BT\n");
-    }
-    
-    // Create and begin new element mark if we have a valid element ID
     if (fNextMarksElemId) {
         fCurrentlyActiveMark = fDoc->createMarkForElemId(fNextMarksElemId);
-        
         if (fCurrentlyActiveMark) {
-            // Write PDF marked content operators
+            // Begin this mark
             SkPDFUnion::Name(fCurrentlyActiveMark.structType()).emitObject(fOut);
             fOut->writeText(" <</MCID ");
             fOut->writeDecAsText(fCurrentlyActiveMark.mcid());
             fOut->writeText(" >>BDC\n");
-            
             fMadeMarks = true;
         }
     }
 }
-// END OF NON-SKIA-UPSTREAMED CHANGE
+
+void SkPDFDevice::MarkedContentManager::endMark() {
+    if (fCurrentlyActiveMark) {
+        // End this mark
+        fOut->writeText("EMC\n");
+        fCurrentlyActiveMark = SkPDFStructTree::Mark();
+    }
+}
 
 bool SkPDFDevice::MarkedContentManager::hasActiveMark() const { return bool(fCurrentlyActiveMark); }
 
@@ -990,7 +960,21 @@ void SkPDFDevice::internalDrawGlyphRun(
     SkMatrix pageXform = this->deviceToGlobal().asM33();
     pageXform.postConcat(fDocument->currentPageTransform());
 
-    fMarkManager.beginMark(true);
+    if (fMarkManager.hasActiveMark()) {
+        fMarkManager.endMark();
+    }
+    out->writeText("BT\n");
+
+    // We need to ensure EMC is written before ET
+    auto cleanupTextBlock = [this, out]() {
+        if (fMarkManager.hasActiveMark()) {
+            fMarkManager.endMark();
+        }
+        out->writeText("ET\n");
+    };
+    SK_AT_SCOPE_EXIT(cleanupTextBlock());
+
+    fMarkManager.beginMark();
     if (!glyphRun.text().empty()) {
         fDocument->addStructElemTitle(fMarkManager.elemId(), glyphRun.text());
     }
@@ -1163,11 +1147,6 @@ std::unique_ptr<SkPDFDict> SkPDFDevice::makeResourceDict() {
 }
 
 std::unique_ptr<SkStreamAsset> SkPDFDevice::content() {
-    // Implicitly close any still active marked-content sequence.
-    // Must do this before fContent is written to buffer.
-    fMarkManager.setNextMarksElemId(0);
-    fMarkManager.beginMark();
-
     if (fActiveStackState.fContentStream) {
         fActiveStackState.drainStack();
         fActiveStackState = SkPDFGraphicStackState();
@@ -1175,6 +1154,11 @@ std::unique_ptr<SkStreamAsset> SkPDFDevice::content() {
     if (fContent.bytesWritten() == 0) {
         return std::make_unique<SkMemoryStream>();
     }
+
+    // Implicitly close any still active marked-content sequence.
+    // Must do this before fContent is written to buffer.
+    fMarkManager.setNextMarksElemId(0);
+    fMarkManager.beginMark();
 
     SkDynamicMemoryWStream buffer;
     if (fInitialTransform.getType() != SkMatrix::kIdentity_Mask) {
