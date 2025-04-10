@@ -167,7 +167,8 @@ void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent) 
           } else {
             fPosition = fThickness;
           }
-        //   fPosition -= ascent;
+          fPosition -= ascent;
+          fPosition -= 10.0;
           break;
       case TextDecoration::kOverline:
           fPosition = - ascent;
