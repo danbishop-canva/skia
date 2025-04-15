@@ -150,13 +150,6 @@ void Decorations::calculateThickness(TextStyle textStyle, sk_sp<SkTypeface> type
     textStyle.getFontMetrics(&fFontMetrics);
 
     fThickness = std::max(1.0f, textStyle.getFontSize() / 10.0f);
-
-    if (textStyle.getDecorationType() == TextDecoration::kLineThrough) {
-        if ((fFontMetrics.fFlags & SkFontMetrics::FontMetricsFlags::kStrikeoutThicknessIsValid_Flag) &&
-             fFontMetrics.fStrikeoutThickness > 0) {
-            fThickness = fFontMetrics.fStrikeoutThickness;
-        }
-    }
     fThickness *= textStyle.getDecorationThicknessMultiplier();
 }
 
