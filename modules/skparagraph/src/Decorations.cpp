@@ -37,7 +37,8 @@ void Decorations::paint(ParagraphPainter* painter, const TextStyle& textStyle, c
         calculatePosition(decoration,
                           decoration == TextDecoration::kOverline
                           ? context.run->correctAscent() - context.run->ascent()
-                          : context.run->correctAscent());
+                          : context.run->correctAscent(), 
+                          textStyle.getDecorationUnderlinePositionOffset());
 
         calculatePaint(textStyle);
 
@@ -46,7 +47,7 @@ void Decorations::paint(ParagraphPainter* painter, const TextStyle& textStyle, c
         SkScalar y = context.clip.top() + fPosition;
 
         bool drawGaps = textStyle.getDecorationMode() == TextDecorationMode::kGaps &&
-                        textStyle.getDecorationType() == TextDecoration::kUnderline;
+                        decoration == TextDecoration::kUnderline;
 
         switch (textStyle.getDecorationStyle()) {
           case TextDecorationStyle::kWavy: {
@@ -122,6 +123,13 @@ void Decorations::calculateGaps(const TextLine::ClipContext& context, const SkRe
     SkPathBuilder path;
     auto start = rect.fLeft;
     path.moveTo(rect.fLeft, rect.fTop);
+
+    // If there are no intersections, draw the full line
+    if (intersections.empty()) {
+        path.lineTo(rect.fRight, rect.fTop);
+        fPath = path.detach();
+        return;
+    }
     for (int i = 0; i < intersections.size(); i += 2) {
         auto end = intersections[i] - halo;
         if (end - start >= halo) {
@@ -129,7 +137,7 @@ void Decorations::calculateGaps(const TextLine::ClipContext& context, const SkRe
             path.lineTo(end, rect.fTop).moveTo(start, rect.fTop);
         }
     }
-    if (!intersections.empty() && (rect.fRight - start > halo)) {
+    if (rect.fRight - start > halo) {
         path.lineTo(rect.fRight, rect.fTop);
     }
     fPath = path.detach();
@@ -141,12 +149,7 @@ void Decorations::calculateThickness(TextStyle textStyle, sk_sp<SkTypeface> type
     textStyle.setTypeface(std::move(typeface));
     textStyle.getFontMetrics(&fFontMetrics);
 
-    fThickness = textStyle.getFontSize() / 14.0f;
-
-    if ((fFontMetrics.fFlags & SkFontMetrics::FontMetricsFlags::kUnderlineThicknessIsValid_Flag) &&
-         fFontMetrics.fUnderlineThickness > 0) {
-        fThickness = fFontMetrics.fUnderlineThickness;
-    }
+    fThickness = std::max(1.0f, textStyle.getFontSize() / 10.0f);
 
     if (textStyle.getDecorationType() == TextDecoration::kLineThrough) {
         if ((fFontMetrics.fFlags & SkFontMetrics::FontMetricsFlags::kStrikeoutThicknessIsValid_Flag) &&
@@ -158,7 +161,7 @@ void Decorations::calculateThickness(TextStyle textStyle, sk_sp<SkTypeface> type
 }
 
 // This is how flutter calculates the positioning
-void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent) {
+void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent, SkScalar underlinePositionOffset) {
     switch (decoration) {
       case TextDecoration::kUnderline:
           if ((fFontMetrics.fFlags & SkFontMetrics::FontMetricsFlags::kUnderlinePositionIsValid_Flag) &&
@@ -167,6 +170,7 @@ void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent) 
           } else {
             fPosition = fThickness;
           }
+          fPosition += underlinePositionOffset;
           fPosition -= ascent;
           break;
       case TextDecoration::kOverline:

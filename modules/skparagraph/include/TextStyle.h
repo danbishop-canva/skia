@@ -73,13 +73,15 @@ struct Decoration {
     SkColor fColor;
     TextDecorationStyle fStyle;
     SkScalar fThicknessMultiplier;
+    SkScalar fUnderlinePositionOffset;
 
     bool operator==(const Decoration& other) const {
         return this->fType == other.fType &&
                this->fMode == other.fMode &&
                this->fColor == other.fColor &&
                this->fStyle == other.fStyle &&
-               this->fThicknessMultiplier == other.fThicknessMultiplier;
+               this->fThicknessMultiplier == other.fThicknessMultiplier &&
+               this->fUnderlinePositionOffset == other.fUnderlinePositionOffset;
     }
 };
 
@@ -217,11 +219,15 @@ public:
     SkScalar getDecorationThicknessMultiplier() const {
         return fDecoration.fThicknessMultiplier;
     }
+    SkScalar getDecorationUnderlinePositionOffset() const {
+        return fDecoration.fUnderlinePositionOffset;
+    }
     void setDecoration(TextDecoration decoration) { fDecoration.fType = decoration; }
     void setDecorationMode(TextDecorationMode mode) { fDecoration.fMode = mode; }
     void setDecorationStyle(TextDecorationStyle style) { fDecoration.fStyle = style; }
     void setDecorationColor(SkColor color) { fDecoration.fColor = color; }
     void setDecorationThicknessMultiplier(SkScalar m) { fDecoration.fThicknessMultiplier = m; }
+    void setDecorationUnderlinePositionOffset(SkScalar o) { fDecoration.fUnderlinePositionOffset = o; }
 
     // Weight/Width/Slant
     SkFontStyle getFontStyle() const { return fFontStyle; }
@@ -298,7 +304,8 @@ private:
             // value to indicate no decoration color was set.
             SK_ColorTRANSPARENT, TextDecorationStyle::kSolid,
             // Thickness is applied as a multiplier to the default thickness of the font.
-            1.0f};
+            1.0f,
+            0.0f};
 
     SkFontStyle fFontStyle;
 
