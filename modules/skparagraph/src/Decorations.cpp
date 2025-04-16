@@ -150,7 +150,7 @@ void Decorations::calculateThickness(TextStyle textStyle, sk_sp<SkTypeface> type
     textStyle.setTypeface(std::move(typeface));
     textStyle.getFontMetrics(&fFontMetrics);
 
-    fThickness = std::floor(std::max(1.0f, textStyle.getFontSize() / 10.0f));
+    fThickness = std::max(1.0f, textStyle.getFontSize() / 10.0f);
     fThickness *= textStyle.getDecorationThicknessMultiplier();
 }
 
@@ -165,6 +165,8 @@ void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent, 
             fPosition = fThickness;
           }
           fPosition -= ascent;
+          fPosition += std::round(fThickness);
+          fThickness = std::floor(fThickness);
           break;
       case TextDecoration::kOverline:
           fPosition = - ascent;
