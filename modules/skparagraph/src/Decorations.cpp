@@ -150,7 +150,7 @@ void Decorations::calculateThickness(TextStyle textStyle, sk_sp<SkTypeface> type
     textStyle.setTypeface(std::move(typeface));
     textStyle.getFontMetrics(&fFontMetrics);
 
-    fThickness = std::max(1.0f, textStyle.getFontSize() / 10.0f);
+    fThickness = std::floor(std::max(1.0f, textStyle.getFontSize() / 10.0f));
     fThickness *= textStyle.getDecorationThicknessMultiplier();
 }
 
