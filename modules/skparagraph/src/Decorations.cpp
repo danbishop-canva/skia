@@ -161,18 +161,10 @@ void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent, 
           if ((fFontMetrics.fFlags & SkFontMetrics::FontMetricsFlags::kUnderlinePositionIsValid_Flag) &&
                fFontMetrics.fUnderlinePosition > 0) {
             fPosition  = fFontMetrics.fUnderlinePosition;
-            std::cout << "underline position: " << fPosition << std::endl;
           } else {
             fPosition = fThickness;
-            std::cout << "underline thickness: " << fPosition << std::endl;
           }
-          fPosition += underlinePositionOffset;
-          fPosition += fThickness;
           fPosition -= ascent;
-          fPosition = std::floor(fPosition);
-          std::cout << "underline ascent: " << ascent << std::endl;
-          std::cout << "underline thickness: " << fThickness << std::endl;
-          std::cout << "underline final position: " << fPosition << std::endl;
           break;
       case TextDecoration::kOverline:
           fPosition = - ascent;
