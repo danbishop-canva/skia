@@ -169,6 +169,7 @@ void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent, 
           fPosition += underlinePositionOffset;
           fPosition += fThickness;
           fPosition -= ascent;
+          fPosition = std::floor(fPosition);
           std::cout << "underline ascent: " << ascent << std::endl;
           std::cout << "underline thickness: " << fThickness << std::endl;
           std::cout << "underline final position: " << fPosition << std::endl;
