@@ -84,7 +84,8 @@ public:
      *  If  offset+length > this->size(), then this returns nullptr.
      */
     sk_sp<SkData> shareSubset(size_t offset, size_t length);
-    sk_sp<const SkData> shareSubset(size_t offset, size_t length) const;
+    // rust-skia: Implementation is missing.
+    // sk_sp<const SkData> shareSubset(size_t offset, size_t length) const;
 
     /**
      *  Helper to copy a range of the data into a caller-provided buffer.
