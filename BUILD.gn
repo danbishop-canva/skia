@@ -1846,6 +1846,7 @@ skia_component("skia") {
     ":lasx",
     ":minify_sksl",
     ":ndk_images",
+    ":pathops",
     ":png_decode_rust",
     ":raw",
     ":rust_icc",
